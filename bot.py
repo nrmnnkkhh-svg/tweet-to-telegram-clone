@@ -141,7 +141,8 @@ async def main():
         print("⚠️ No tweets"); return
 
     state = load_state()
-    last_id = int(state.get("last_tweet_id", 0))
+    last_id_raw = state.get("last_tweet_id")
+    last_id = int(last_id_raw) if last_id_raw else 0
     recent_ids = set(state.get("recent_ids", []))
     thread_map = state.get("thread_messages", {})   # conv_id -> {msg_id, last_tweet_id, text}
 
