@@ -11,15 +11,29 @@ TEMPLATE_FILE  = "template.txt"
 
 BURNER_USERNAME = "NRMNDIDI"
 
+MAX_RECENT_IDS = 100   # keep this many IDs to avoid duplicates
+
 api = API()
 
 def load_state():
     if os.path.exists(STATE_FILE):
-        with open(STATE_FILE) as f:
-            return json.load(f)
-    return {}
+        try:
+            with open(STATE_FILE) as f:
+                state = json.load(f)
+                if not isinstance(state, dict):
+                    return {}
+                # ensure recent_ids is a list of strings
+                if "recent_ids" not in state or not isinstance(state["recent_ids"], list):
+                    state["recent_ids"] = []
+                return state
+        except Exception:
+            pass
+    return {"last_tweet_id": None, "recent_ids": []}
 
 def save_state(state):
+    # keep only the last MAX_RECENT_IDS
+    if "recent_ids" in state:
+        state["recent_ids"] = state["recent_ids"][-MAX_RECENT_IDS:]
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2)
 
@@ -96,11 +110,18 @@ async def main():
     last_id = state.get("last_tweet_id")
     if last_id:
         last_id = int(last_id)
-    print(f"📌 Last forwarded tweet ID: {last_id or 'none'}")
+    recent_ids = set(state.get("recent_ids", []))
 
+    print(f"📌 Last forwarded tweet ID: {last_id or 'none'}")
+    print(f"📋 Recent ID cache: {len(recent_ids)} entries")
+
+    # Filter new tweets: ID > last_id AND not in recent_ids
     new_tweets = []
     for t in raw_tweets:
-        if last_id and int(t.id) <= last_id:
+        tid = t.id
+        if last_id and tid <= last_id:
+            continue
+        if str(tid) in recent_ids:
             continue
         text = t.rawContent or ""
         if not text:
@@ -113,20 +134,27 @@ async def main():
         print("✅ Nothing new")
         return
 
-    print(f"📬 {len(new_tweets)} new tweet(s)")
+    print(f"📬 {len(new_tweets)} new tweet(s) to forward")
 
     success = 0
     for t in new_tweets:
         url = f"https://x.com/{TWITTER_USER}/status/{t.id}"
         print(f"📤 Sending {t.id}...")
         if await send_telegram(t.rawContent, url):
-            state["last_tweet_id"] = t.id
+            tid_str = str(t.id)
+            state["last_tweet_id"] = tid_str
+            recent_ids.add(tid_str)
+            state["recent_ids"] = list(recent_ids)
             save_state(state)
             success += 1
             await asyncio.sleep(1.5)
         else:
             print("❌ Send failed, stopping batch")
             break
+
+    # Final save to trim recent_ids
+    state["recent_ids"] = list(recent_ids)
+    save_state(state)
 
     state["total_sent"] = state.get("total_sent", 0) + success
     save_state(state)
