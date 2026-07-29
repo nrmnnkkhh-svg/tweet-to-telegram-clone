@@ -156,6 +156,7 @@ async def main():
     for t in raw_tweets:
         tid = int(t.id)
         if tid <= last_id or str(tid) in recent_ids:
+                print(f'⏭️  Skipping duplicate tweet {tid}')
             continue
         text = t.rawContent or ""
         if not text:
