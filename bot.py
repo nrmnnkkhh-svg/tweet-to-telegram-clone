@@ -12,6 +12,7 @@ TEMPLATE_FILE  = "template.txt"
 BURNER_USERNAME = "NRMNDIDI"
 
 SEPARATOR = "\n\n"
+MAX_RECENT_IDS = 500
 
 api = API()
 
@@ -30,7 +31,7 @@ def load_state():
     return state
 
 def save_state(state):
-    state["recent_ids"] = state["recent_ids"][-100:]
+    state["recent_ids"] = state["recent_ids"][-MAX_RECENT_IDS:]
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2)
 
@@ -156,7 +157,7 @@ async def main():
     for t in raw_tweets:
         tid = int(t.id)
         if tid <= last_id or str(tid) in recent_ids:
-                print(f'⏭️  Skipping duplicate tweet {tid}')
+            print(f"⏭️  Skipping duplicate tweet {tid}")
             continue
         text = t.rawContent or ""
         if not text:
@@ -169,13 +170,11 @@ async def main():
 
     new_tweets.sort(key=lambda x: x["id"])
 
-    # Process each tweet: either send new or edit existing thread
     for tw in new_tweets:
         conv_id = tw["conv_id"]
         existing = thread_map.get(conv_id)
 
         if existing and existing.get("msg_id"):
-            # Edit the existing message
             combined = build_thread_text([tw["text"]], existing["text"], footer)
             if await edit_message(existing["msg_id"], combined):
                 existing["text"] = combined
@@ -184,7 +183,6 @@ async def main():
                 state["total_sent"] = state.get("total_sent", 0) + 1
                 await asyncio.sleep(1.5)
             else:
-                # Fallback: send a new message
                 combined = build_thread_text([tw["text"]], "", footer)
                 msg_id = await send_message(combined)
                 if msg_id:
@@ -199,11 +197,9 @@ async def main():
                     print("❌ Failed to send, stopping")
                     return
         else:
-            # First tweet in this thread (or standalone)
             msg_text = format_single(tw["text"])
             msg_id = await send_message(msg_text)
             if msg_id:
-                # Record in thread_map regardless – it may become a thread later
                 thread_map[conv_id] = {
                     "msg_id": msg_id,
                     "last_tweet_id": str(tw["id"]),
