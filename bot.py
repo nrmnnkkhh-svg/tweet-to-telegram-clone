@@ -198,6 +198,7 @@ async def main():
         if str(tid) in recent_ids:
             continue
         text = t.rawContent or ""
+            print(f"DEBUG: id={t.id} conv_id={getattr(t, "conversationId", "N/A")}")
         if not text:
             continue
         # t.conversationId is usually the ID of the original tweet in the thread
