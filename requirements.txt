@@ -1,0 +1,2 @@
+twscrape>=0.1.14
+aiohttp>=3.9
