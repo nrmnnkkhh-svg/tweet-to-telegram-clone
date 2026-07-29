@@ -39,7 +39,6 @@ def load_template():
         return f.read().strip()
 
 def get_footer():
-    """Extract the footer from the template (everything after {text})."""
     template = load_template()
     return template.replace("{text}", "").strip()
 
@@ -100,15 +99,12 @@ def format_single(text: str) -> str:
     return load_template().replace("{text}", safe)
 
 def strip_footer(text: str, footer: str) -> str:
-    """Remove the footer from the end of text if present."""
     if footer and text.endswith(footer):
         return text[:-len(footer)].rstrip()
     return text
 
 def build_thread_text(tweet_texts: list[str], existing_text: str = "", footer: str = "") -> str:
-    """Combine tweet texts, adding footer only once at the very end."""
     safe_texts = [t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") for t in tweet_texts]
-    # Strip footer from existing_text if present (for clean merging)
     clean_existing = strip_footer(existing_text, footer) if existing_text else ""
     if clean_existing:
         combined = clean_existing + SEPARATOR + SEPARATOR.join(safe_texts)
@@ -172,75 +168,54 @@ async def main():
 
     new_tweets.sort(key=lambda x: x["id"])
 
-    threads = {}
-    standalone = []
+    # Process each tweet: either send new or edit existing thread
     for tw in new_tweets:
-        cid = tw["conv_id"]
-        if cid == str(tw["id"]):
-            if cid in thread_map or any(t["conv_id"] == cid for t in new_tweets if t["id"] != tw["id"]):
-                threads.setdefault(cid, []).append(tw)
-            else:
-                standalone.append(tw)
-        else:
-            threads.setdefault(cid, []).append(tw)
-
-    for tw in standalone:
-        msg_text = format_single(tw["text"])
-        msg_id = await send_message(msg_text)
-        if msg_id:
-            state["last_tweet_id"] = str(tw["id"])
-            recent_ids.add(str(tw["id"]))
-            state["total_sent"] = state.get("total_sent", 0) + 1
-            await asyncio.sleep(1.5)
-        else:
-            print("❌ Failed to send standalone tweet, stopping")
-            return
-
-    for conv_id, tweets_in_thread in threads.items():
-        tweets_in_thread.sort(key=lambda x: x["id"])
+        conv_id = tw["conv_id"]
         existing = thread_map.get(conv_id)
-        new_texts = []
-        for tw in tweets_in_thread:
-            if existing and tw["id"] <= int(existing["last_tweet_id"]):
-                continue
-            new_texts.append(tw["text"])
-
-        if not new_texts:
-            continue
 
         if existing and existing.get("msg_id"):
-            # Clean existing text before merging
-            existing_text = existing.get("text", "")
-            combined = build_thread_text(new_texts, existing_text, footer)
+            # Edit the existing message
+            combined = build_thread_text([tw["text"]], existing["text"], footer)
             if await edit_message(existing["msg_id"], combined):
                 existing["text"] = combined
-                max_id = max(int(tw["id"]) for tw in tweets_in_thread)
-                existing["last_tweet_id"] = str(max_id)
+                existing["last_tweet_id"] = str(tw["id"])
                 thread_map[conv_id] = existing
-                state["total_sent"] = state.get("total_sent", 0) + len(new_texts)
+                state["total_sent"] = state.get("total_sent", 0) + 1
                 await asyncio.sleep(1.5)
             else:
-                existing = None
-
-        if not existing:
-            combined = build_thread_text([t["text"] for t in tweets_in_thread], "", footer)
-            msg_id = await send_message(combined)
+                # Fallback: send a new message
+                combined = build_thread_text([tw["text"]], "", footer)
+                msg_id = await send_message(combined)
+                if msg_id:
+                    thread_map[conv_id] = {
+                        "msg_id": msg_id,
+                        "last_tweet_id": str(tw["id"]),
+                        "text": combined,
+                    }
+                    state["total_sent"] = state.get("total_sent", 0) + 1
+                    await asyncio.sleep(1.5)
+                else:
+                    print("❌ Failed to send, stopping")
+                    return
+        else:
+            # First tweet in this thread (or standalone)
+            msg_text = format_single(tw["text"])
+            msg_id = await send_message(msg_text)
             if msg_id:
-                max_id = max(t["id"] for t in tweets_in_thread)
+                # Record in thread_map regardless – it may become a thread later
                 thread_map[conv_id] = {
                     "msg_id": msg_id,
-                    "last_tweet_id": str(max_id),
-                    "text": combined,
+                    "last_tweet_id": str(tw["id"]),
+                    "text": msg_text,
                 }
-                state["total_sent"] = state.get("total_sent", 0) + len(tweets_in_thread)
+                state["total_sent"] = state.get("total_sent", 0) + 1
                 await asyncio.sleep(1.5)
             else:
-                print("❌ Failed to send thread message, stopping")
+                print("❌ Failed to send, stopping")
                 return
 
-        for tw in tweets_in_thread:
-            recent_ids.add(str(tw["id"]))
-            state["last_tweet_id"] = str(tw["id"])
+        state["last_tweet_id"] = str(tw["id"])
+        recent_ids.add(str(tw["id"]))
 
     state["thread_messages"] = thread_map
     state["recent_ids"] = list(recent_ids)
