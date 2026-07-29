@@ -11,7 +11,7 @@ TEMPLATE_FILE  = "template.txt"
 
 BURNER_USERNAME = "NRMNDIDI"
 
-SEPARATOR = "\n\n➖➖➖➖➖➖➖➖➖➖\n\n"
+SEPARATOR = "\n\n"
 
 api = API()
 
