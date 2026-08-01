@@ -19,6 +19,7 @@ jobs:
         env:
           X_COOKIES_CLONE: ${{ secrets.X_COOKIES_CLONE }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
         run: python bot.py
       - name: Commit updated state
         run: |
