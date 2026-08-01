@@ -27,6 +27,11 @@ jobs:
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
         run: python generate_topics.py
 
+      - name: Pin new topics to channel
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python pin_topics.py
+
       - name: Commit updated topics to repository
         run: |
           git config user.name  "github-actions[bot]"
