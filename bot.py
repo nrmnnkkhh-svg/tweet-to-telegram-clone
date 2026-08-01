@@ -174,7 +174,7 @@ async def send_message(text: str) -> int | None:
                 async with sess.post(url, json=payload) as resp:
                     data = await resp.json()
                     if data.get("ok"):
-                        print(f"✅ Sent msg {data['result']['message_id']}")
+                        print(f"✅ Sent tweet {tweet_id} → msg {data['result']['message_id']}")
                         return data["result"]["message_id"]
                     if data.get("error_code") == 429:
                         wait = data.get("parameters", {}).get("retry_after", 10)
