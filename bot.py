@@ -317,6 +317,9 @@ async def handle_deleted_tweet(tid: str, state, thread_map, tweet_to_msg):
 # ------------------------------------------------------------
 async def main():
     print("🚀 Run started")
+    if os.path.exists("paused.txt"):
+        print("⏸️  Bot is paused (paused.txt exists). Exiting.")
+        return
 
     if AI_API_KEY:
         ctx = load_weekly_context()
