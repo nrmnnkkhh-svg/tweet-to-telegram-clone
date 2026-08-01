@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Weekly Iran news topics generator.
-Called by .github/workflows/weekly_topics.yml every Sunday.
-Uses Groq API (free tier) to identify current Iran topics.
-Saves result to weekly_context.json which bot.py reads for classification context.
+Weekly Iran news topics generator – now with real headlines.
+1. Fetches recent Iran headlines from Google News RSS (free, no key).
+2. Asks Groq to extract the 10 most important topics from those headlines.
+3. Saves the result to weekly_context.json.
 """
 import asyncio, json, os, sys
 import aiohttp
@@ -12,30 +12,49 @@ from datetime import datetime, timezone
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
+# Google News RSS for “Iran” in English (world news)
+RSS_URL = "https://news.google.com/rss/search?q=iran&hl=en-US&gl=US&ceid=US:en"
 
-async def generate_topics(api_key: str) -> list:
-    prompt = """You are a senior geopolitical analyst specializing in Iran and the Middle East.
+async def fetch_headlines():
+    """Returns a list of recent headlines from Google News RSS."""
+    try:
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(RSS_URL) as resp:
+                if resp.status != 200:
+                    print(f"⚠️ RSS fetch failed: HTTP {resp.status}")
+                    return []
+                raw = await resp.text()
 
-Generate a list of the 10 most important CURRENT and ONGOING news topics about Iran in international media right now.
+        # Simple XML parsing for <title> tags (headlines are in <title> after removing feed title)
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(raw)
+        headlines = []
+        for item in root.findall(".//item"):
+            title = item.find("title").text
+            if title:
+                headlines.append(title)
+        # Remove the feed's own title (first one is usually the feed name)
+        if headlines:
+            headlines = headlines[1:]   # drop the channel title
+        return headlines[:30]  # take up to 30 recent headlines
+    except Exception as e:
+        print(f"⚠️ RSS parsing error: {e}")
+        return []
 
-Choose topics that are actively developing and significant, such as:
-- Nuclear program status (IAEA access, enrichment percentages, deal talks)
-- Active US/EU/UN sanction campaigns
-- Iran proxy group operations (Hezbollah, Houthis, Hamas, Iraqi militias)
-- Direct Iran-Israel military tensions or strikes
-- IRGC commanders, structure, or operations
-- Domestic political developments (Supreme Leader, parliament, government)
-- Economic collapse indicators (rial value, oil export workarounds, inflation)
-- Human rights: mass executions, protests, political prisoners
-- Iran's diplomatic positioning (Russia alliance, China deals, Western negotiations)
-- Weapons: ballistic missiles, drones, transfers to Russia or proxies
+async def generate_topics(api_key: str, headlines: list) -> list:
+    """Ask Groq to extract the top 10 important Iran news topics from the headlines."""
+    if not headlines:
+        return []
 
-Return ONLY a raw JSON array of exactly 10 short topic strings.
-Each topic: under 15 words, specific, factual.
-Zero preamble. Zero explanation. Zero markdown fences. ONLY the JSON array.
+    joined = "\n".join(f"- {h}" for h in headlines)
+    prompt = f"""Below are recent news headlines about Iran. Identify the 10 most important, recurring, or significant topics from these headlines.
 
-Correct output format:
-["Iran enriches uranium to 84% as IAEA blocked for third time", "US Treasury sanctions 15 entities linked to Iranian oil", ...]"""
+Headlines:
+{joined}
+
+Return ONLY a raw JSON array of exactly 10 short topic strings (each under 15 words). Only include topics that clearly appear in the headlines. Zero preamble, zero explanation, zero markdown fences. ONLY the JSON array.
+
+Example: ["US sanctions more Iranian entities", "Iran enriches uranium to 60%", ...]"""
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -56,8 +75,6 @@ Correct output format:
             data = await resp.json()
 
     raw = data["choices"][0]["message"]["content"].strip()
-
-    # Strip markdown fences in case model adds them despite instructions
     for fence in ["```json", "```JSON", "```"]:
         if raw.startswith(fence):
             raw = raw[len(fence):]
@@ -67,8 +84,6 @@ Correct output format:
     topics = json.loads(raw)
     if not isinstance(topics, list):
         raise ValueError(f"Expected JSON array, got {type(topics).__name__}")
-
-    # Clean and cap to 10
     return [str(t).strip() for t in topics[:10] if str(t).strip()]
 
 
@@ -83,17 +98,21 @@ async def main():
     date_str = now.strftime("%Y-%m-%d")
 
     print(f"📅 Generating Iran news topics for week {week_str} ({date_str})")
-    print(f"🤖 Model: {GROQ_MODEL}")
+    print("📰 Fetching real headlines from Google News…")
+    headlines = await fetch_headlines()
+    if not headlines:
+        print("❌ No headlines fetched – cannot generate accurate topics.")
+        sys.exit(1)
+    print(f"   → {len(headlines)} headlines retrieved")
 
+    print(f"🤖 Asking Groq to extract top 10 topics…")
     try:
-        topics = await generate_topics(api_key)
+        topics = await generate_topics(api_key, headlines)
     except json.JSONDecodeError as exc:
         print(f"❌ AI returned invalid JSON: {exc}")
-        print("   Keeping previous weekly_context.json unchanged.")
         sys.exit(1)
     except Exception as exc:
         print(f"❌ Topic generation failed: {exc}")
-        print("   Keeping previous weekly_context.json unchanged.")
         sys.exit(1)
 
     print(f"\n✅ Generated {len(topics)} topics:")
