@@ -8,7 +8,6 @@ TOKEN          = os.environ["TELEGRAM_BOT_TOKEN"]
 COOKIES        = os.environ["X_COOKIES_CLONE"]
 AI_API_KEY     = os.environ.get("AI_API_KEY", "")
 STATE_FILE     = "state.json"
-LOCK_FILE      = "state.lock"
 TEMPLATE_FILE  = "template.txt"
 CONTEXT_FILE   = "weekly_context.json"
 
@@ -17,7 +16,6 @@ BURNER_USERNAME = "NRMNDIDI"
 SEPARATOR = "\n\n"
 MAX_RECENT_IDS = 500
 DELETION_CHECK_COUNT = 20
-LOCK_TIMEOUT_SEC = 120          # consider lock stale after 2 minutes
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.1-8b-instant"
@@ -25,32 +23,7 @@ GROQ_MODEL = "llama-3.1-8b-instant"
 api = API()
 
 # ------------------------------------------------------------
-#  Lock helpers
-# ------------------------------------------------------------
-def acquire_lock():
-    """Try to create a lock file. Return True if we own the lock."""
-    if os.path.exists(LOCK_FILE):
-        # check if it's stale
-        try:
-            mtime = os.path.getmtime(LOCK_FILE)
-            if time.time() - mtime > LOCK_TIMEOUT_SEC:
-                os.remove(LOCK_FILE)
-            else:
-                return False   # another run is active
-        except OSError:
-            pass
-    with open(LOCK_FILE, "w") as f:
-        f.write(str(time.time()))
-    return True
-
-def release_lock():
-    try:
-        os.remove(LOCK_FILE)
-    except OSError:
-        pass
-
-# ------------------------------------------------------------
-#  State management
+#  State helpers
 # ------------------------------------------------------------
 def load_state():
     if not os.path.exists(STATE_FILE):
@@ -83,6 +56,7 @@ def save_state(state):
     state["tweet_to_msg"] = {tid: info for tid, info in state["tweet_to_msg"].items() if tid in valid_ids}
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2)
+    print(f"💾 State saved (last_tweet_id={state['last_tweet_id']}, recent={len(state['recent_ids'])})")
 
 def load_template():
     with open(TEMPLATE_FILE, "r", encoding="utf-8") as f:
@@ -93,7 +67,7 @@ def get_footer():
     return template.replace("{text}", "").strip()
 
 # ------------------------------------------------------------
-#  AI context loader
+#  AI helpers
 # ------------------------------------------------------------
 def load_weekly_context() -> dict:
     if os.path.exists(CONTEXT_FILE):
@@ -104,9 +78,6 @@ def load_weekly_context() -> dict:
             print(f"⚠️  Could not parse {CONTEXT_FILE}: {exc}")
     return {"topics": [], "week": "unknown"}
 
-# ------------------------------------------------------------
-#  AI classification
-# ------------------------------------------------------------
 async def classify_tweet(tweet_text: str) -> str:
     if not AI_API_KEY:
         return "IMPORTANT"
@@ -165,7 +136,7 @@ Reply with ONLY one word — either IMPORTANT or NON_IMPORTANT. No punctuation, 
 # ------------------------------------------------------------
 #  Telegram helpers
 # ------------------------------------------------------------
-async def send_message(text: str) -> int | None:
+async def send_message(text: str, tweet_id: str) -> int | None:
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {"chat_id": TELEGRAM_CHAT, "text": text, "disable_web_page_preview": True}
     for attempt in range(5):
@@ -174,8 +145,9 @@ async def send_message(text: str) -> int | None:
                 async with sess.post(url, json=payload) as resp:
                     data = await resp.json()
                     if data.get("ok"):
-                        print(f"✅ Sent tweet {tweet_id} → msg {data['result']['message_id']}")
-                        return data["result"]["message_id"]
+                        msg_id = data["result"]["message_id"]
+                        print(f"✅ Sent tweet {tweet_id} → msg {msg_id}")
+                        return msg_id
                     if data.get("error_code") == 429:
                         wait = data.get("parameters", {}).get("retry_after", 10)
                         print(f"⏳ Rate limited, waiting {wait}s…")
@@ -235,24 +207,8 @@ async def delete_message(msg_id: int) -> bool:
     return False
 
 # ------------------------------------------------------------
-#  Formatting helpers
+#  Formatting
 # ------------------------------------------------------------
-def format_single(text: str) -> str:
-    safe = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    return load_template().replace("{text}", safe)
-
-def strip_footer(text: str, footer: str) -> str:
-    if footer and text.endswith(footer):
-        return text[:-len(footer)].rstrip()
-    return text
-
-def build_thread_text(texts: list[str], footer: str) -> str:
-    safe_texts = [t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") for t in texts]
-    combined = SEPARATOR.join(safe_texts)
-    if footer:
-        combined += "\n\n" + footer
-    return combined
-
 def format_ai_message(text: str, importance: str) -> str:
     safe = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     if importance == "IMPORTANT":
@@ -304,7 +260,6 @@ async def handle_deleted_tweet(tid: str, state, thread_map, tweet_to_msg):
     info = tweet_to_msg.get(tid)
     if not info:
         return
-
     msg_id = info["msg_id"]
     conv_id = info.get("conv_id")
     is_thread = info.get("is_thread", False)
@@ -347,118 +302,87 @@ async def handle_deleted_tweet(tid: str, state, thread_map, tweet_to_msg):
 async def main():
     print("🚀 Run started")
 
-    # Lock check
-    if not acquire_lock():
-        print("⏳ Another run is active. Exiting.")
-        return
+    if AI_API_KEY:
+        ctx = load_weekly_context()
+        print(f"🤖 AI classification: ON  |  {len(ctx.get('topics',[]))} topics for {ctx.get('week','?')}")
+    else:
+        print("⚠️  AI classification: OFF")
+
     try:
-        # (rest of main goes inside the try-finally to release lock)
-        if AI_API_KEY:
-            ctx = load_weekly_context()
-            print(f"🤖 AI classification: ON  |  {len(ctx.get('topics',[]))} topics for {ctx.get('week','?')}")
-        else:
-            print("⚠️  AI classification: OFF (set AI_API_KEY)")
+        await api.pool.add_account_cookies(BURNER_USERNAME, COOKIES)
+        print("✅ Cookies loaded")
+        acc = await api.pool.get_account(BURNER_USERNAME)
+        if not acc.active:
+            print("Account not active"); return
+        user = await api.user_by_login(TWITTER_USER)
+        user_id = user.id
+        print(f"📌 User ID: {user_id}")
 
-        try:
-            await api.pool.add_account_cookies(BURNER_USERNAME, COOKIES)
-            print("✅ Cookies loaded")
-            acc = await api.pool.get_account(BURNER_USERNAME)
-            if not acc.active:
-                print("Account not active"); return
-            user = await api.user_by_login(TWITTER_USER)
-            user_id = user.id
-            print(f"📌 User ID: {user_id}")
+        raw_tweets = []
+        seen = set()
+        async for t in api.user_tweets(user_id, limit=30):
+            if t.id not in seen:
+                seen.add(t.id)
+                raw_tweets.append(t)
+                if len(raw_tweets) >= 30:
+                    break
+        raw_tweets.sort(key=lambda t: t.id, reverse=True)
+        print(f"📥 Got {len(raw_tweets)} tweets")
+    except Exception as e:
+        print(f"❌ Fetch failed: {e}"); return
 
-            raw_tweets = []
-            seen = set()
-            async for t in api.user_tweets(user_id, limit=30):
-                if t.id not in seen:
-                    seen.add(t.id)
-                    raw_tweets.append(t)
-                    if len(raw_tweets) >= 30:
-                        break
-            raw_tweets.sort(key=lambda t: t.id, reverse=True)
-            print(f"📥 Got {len(raw_tweets)} tweets")
-        except Exception as e:
-            print(f"❌ Fetch failed: {e}"); return
+    state = load_state()
+    last_id = int(state.get("last_tweet_id", 0))
+    recent_ids = set(state.get("recent_ids", []))
+    thread_map = state.get("thread_messages", {})
+    tweet_to_msg = state.get("tweet_to_msg", {})
+    footer = get_footer()
 
-        state = load_state()
-        last_id_raw = state.get("last_tweet_id")
-        last_id = int(last_id_raw) if last_id_raw else 0
-        recent_ids = set(state.get("recent_ids", []))
-        thread_map = state.get("thread_messages", {})
-        tweet_to_msg = state.get("tweet_to_msg", {})
-        footer = get_footer()
+    new_tweets = []
+    if raw_tweets:
+        for t in raw_tweets:
+            tid = int(t.id)
+            if tid <= last_id or str(tid) in recent_ids:
+                print(f"⏭️  Skipping duplicate tweet {tid}")
+                continue
+            text = t.rawContent or ""
+            if not text:
+                continue
+            conv_id = str(getattr(t, "conversationId", tid))
+            new_tweets.append({"id": tid, "text": text, "conv_id": conv_id})
 
-        new_tweets = []
-        if raw_tweets:
-            for t in raw_tweets:
-                tid = int(t.id)
-                if tid <= last_id or str(tid) in recent_ids:
-                    print(f"⏭️  Skipping duplicate tweet {tid}")
-                    continue
-                text = t.rawContent or ""
-                if not text:
-                    continue
-                conv_id = str(getattr(t, "conversationId", tid))
-                new_tweets.append({"id": tid, "text": text, "conv_id": conv_id})
+    if not new_tweets:
+        print("✓ No new tweets")
+    else:
+        new_tweets.sort(key=lambda x: x["id"])
+        for tw in new_tweets:
+            importance = await classify_tweet(tw["text"])
+            print(f"  🤖 {importance}")
 
-        if new_tweets:
-            new_tweets.sort(key=lambda x: x["id"])
-            for tw in new_tweets:
-                importance = await classify_tweet(tw["text"])
-                print(f"  🤖 {importance}")
+            conv_id = tw["conv_id"]
+            existing = thread_map.get(conv_id)
 
-                conv_id = tw["conv_id"]
-                existing = thread_map.get(conv_id)
-
-                if existing and existing.get("msg_id"):
-                    if not existing.get("importance"):
-                        existing["importance"] = importance
-
-                    new_texts = [tw["text"]]
-                    all_texts = existing["texts"] + new_texts
-
-                    combined = format_thread_with_label(all_texts, existing["importance"], footer)
-
-                    if await edit_message(existing["msg_id"], combined):
-                        existing["texts"] = all_texts
-                        existing["combined"] = combined
-                        existing["last_tweet_id"] = str(tw["id"])
-                        thread_map[conv_id] = existing
-                        state["total_sent"] = state.get("total_sent", 0) + 1
-                        tweet_to_msg[str(tw["id"])] = {
-                            "msg_id": existing["msg_id"],
-                            "conv_id": conv_id,
-                            "is_thread": True,
-                            "text": tw["text"]
-                        }
-                        await asyncio.sleep(1.5)
-                    else:
-                        combined = format_ai_message(tw["text"], importance)
-                        msg_id = await send_message(combined)
-                        if msg_id:
-                            thread_map[conv_id] = {
-                                "msg_id": msg_id,
-                                "last_tweet_id": str(tw["id"]),
-                                "texts": [tw["text"]],
-                                "combined": combined,
-                                "importance": importance
-                            }
-                            state["total_sent"] = state.get("total_sent", 0) + 1
-                            tweet_to_msg[str(tw["id"])] = {
-                                "msg_id": msg_id,
-                                "conv_id": conv_id,
-                                "is_thread": False,
-                                "text": tw["text"]
-                            }
-                            await asyncio.sleep(1.5)
-                        else:
-                            print("❌ Failed to send, stopping")
-                            return
+            if existing and existing.get("msg_id"):
+                if not existing.get("importance"):
+                    existing["importance"] = importance
+                all_texts = existing["texts"] + [tw["text"]]
+                combined = format_thread_with_label(all_texts, existing["importance"], footer)
+                if await edit_message(existing["msg_id"], combined):
+                    existing["texts"] = all_texts
+                    existing["combined"] = combined
+                    existing["last_tweet_id"] = str(tw["id"])
+                    thread_map[conv_id] = existing
+                    state["total_sent"] = state.get("total_sent", 0) + 1
+                    tweet_to_msg[str(tw["id"])] = {
+                        "msg_id": existing["msg_id"],
+                        "conv_id": conv_id,
+                        "is_thread": True,
+                        "text": tw["text"]
+                    }
                 else:
+                    # Fallback to new message
                     msg_text = format_ai_message(tw["text"], importance)
-                    msg_id = await send_message(msg_text)
+                    msg_id = await send_message(msg_text, str(tw["id"]))
                     if msg_id:
                         thread_map[conv_id] = {
                             "msg_id": msg_id,
@@ -474,26 +398,50 @@ async def main():
                             "is_thread": False,
                             "text": tw["text"]
                         }
-                        await asyncio.sleep(1.5)
                     else:
                         print("❌ Failed to send, stopping")
                         return
+            else:
+                msg_text = format_ai_message(tw["text"], importance)
+                msg_id = await send_message(msg_text, str(tw["id"]))
+                if msg_id:
+                    thread_map[conv_id] = {
+                        "msg_id": msg_id,
+                        "last_tweet_id": str(tw["id"]),
+                        "texts": [tw["text"]],
+                        "combined": msg_text,
+                        "importance": importance
+                    }
+                    state["total_sent"] = state.get("total_sent", 0) + 1
+                    tweet_to_msg[str(tw["id"])] = {
+                        "msg_id": msg_id,
+                        "conv_id": conv_id,
+                        "is_thread": False,
+                        "text": tw["text"]
+                    }
+                else:
+                    print("❌ Failed to send, stopping")
+                    return
 
-                state["last_tweet_id"] = str(tw["id"])
-                recent_ids.add(str(tw["id"]))
+            # Save state immediately after each successful send
+            state["last_tweet_id"] = str(tw["id"])
+            recent_ids.add(str(tw["id"]))
+            state["recent_ids"] = list(recent_ids)
+            state["thread_messages"] = thread_map
+            state["tweet_to_msg"] = tweet_to_msg
+            save_state(state)
+            await asyncio.sleep(1.5)
 
-        state["thread_messages"] = thread_map
-        state["recent_ids"] = list(recent_ids)
-        state["tweet_to_msg"] = tweet_to_msg
-        save_state(state)
+    # Final save (redundant but safe)
+    state["thread_messages"] = thread_map
+    state["recent_ids"] = list(recent_ids)
+    state["tweet_to_msg"] = tweet_to_msg
+    save_state(state)
 
-        # deletion check
-        sent_ids = [str(tw["id"]) for tw in new_tweets] if new_tweets else []
-        await check_deleted_tweets(state, thread_map, sent_ids)
-        save_state(state)
-        print(f"✅ Finished processing")
-    finally:
-        release_lock()
+    # Deletion check
+    await check_deleted_tweets(state, thread_map)
+    save_state(state)
+    print("✅ Finished processing")
 
 if __name__ == "__main__":
     asyncio.run(main())
