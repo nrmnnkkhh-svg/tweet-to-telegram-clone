@@ -1,4 +1,5 @@
 name: Clone Forward (Test)
+concurrency: forward-clone
 
 on:
   repository_dispatch:
