@@ -16,6 +16,7 @@ BURNER_USERNAME = "NRMNDIDI"
 SEPARATOR = "\n\n"
 MAX_RECENT_IDS = 500
 DELETION_CHECK_COUNT = 20
+DELETION_MIN_AGE_SEC = 300          # 5 minutes – never delete tweets younger than this
 
 GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.1-8b-instant"
@@ -230,7 +231,7 @@ def format_thread_with_label(texts: list[str], importance: str, footer: str) -> 
     return combined
 
 # ------------------------------------------------------------
-#  Deletion check
+#  Deletion check (NOW WITH MINIMUM AGE)
 # ------------------------------------------------------------
 async def check_deleted_tweets(state, thread_map):
     tweet_to_msg = state.get("tweet_to_msg", {})
@@ -238,14 +239,29 @@ async def check_deleted_tweets(state, thread_map):
     if not recent_ids:
         return
 
-    candidates = [tid for tid in recent_ids if tid in tweet_to_msg]
+    now = time.time()
+    # Collect candidates that have a Telegram mapping AND are old enough
+    candidates = []
+    for tid in recent_ids:
+        if tid not in tweet_to_msg:
+            continue
+        info = tweet_to_msg[tid]
+        forwarded_at = info.get("forwarded_at")
+        if not forwarded_at:
+            continue
+        age = now - forwarded_at
+        if age < DELETION_MIN_AGE_SEC:
+            continue   # too recent, skip
+        candidates.append(tid)
+
     if not candidates:
+        print(f"🔍 No tweets old enough for deletion check yet")
         return
 
     newest_first = list(reversed(candidates))
     to_check = newest_first[:DELETION_CHECK_COUNT]
 
-    print(f"🔍 Checking {len(to_check)} tweets for deletion...")
+    print(f"🔍 Checking {len(to_check)} tweets for deletion (min age {DELETION_MIN_AGE_SEC}s)...")
     for tid in to_check:
         try:
             tweet = await api.tweet_details(tid)
@@ -377,10 +393,10 @@ async def main():
                         "msg_id": existing["msg_id"],
                         "conv_id": conv_id,
                         "is_thread": True,
-                        "text": tw["text"]
+                        "text": tw["text"],
+                        "forwarded_at": time.time()
                     }
                 else:
-                    # Fallback to new message
                     msg_text = format_ai_message(tw["text"], importance)
                     msg_id = await send_message(msg_text, str(tw["id"]))
                     if msg_id:
@@ -396,7 +412,8 @@ async def main():
                             "msg_id": msg_id,
                             "conv_id": conv_id,
                             "is_thread": False,
-                            "text": tw["text"]
+                            "text": tw["text"],
+                            "forwarded_at": time.time()
                         }
                     else:
                         print("❌ Failed to send, stopping")
@@ -417,13 +434,14 @@ async def main():
                         "msg_id": msg_id,
                         "conv_id": conv_id,
                         "is_thread": False,
-                        "text": tw["text"]
+                        "text": tw["text"],
+                        "forwarded_at": time.time()
                     }
                 else:
                     print("❌ Failed to send, stopping")
                     return
 
-            # Save state immediately after each successful send
+            # Save state after each successful send
             state["last_tweet_id"] = str(tw["id"])
             recent_ids.add(str(tw["id"]))
             state["recent_ids"] = list(recent_ids)
@@ -432,15 +450,10 @@ async def main():
             save_state(state)
             await asyncio.sleep(1.5)
 
-    # Final save (redundant but safe)
-    state["thread_messages"] = thread_map
-    state["recent_ids"] = list(recent_ids)
-    state["tweet_to_msg"] = tweet_to_msg
+    # Deletion check (re‑enabled with minimum age)
+    await check_deleted_tweets(state, thread_map)
     save_state(state)
 
-    # Deletion check
-    #await check_deleted_tweets(state, thread_map)
-    save_state(state)
     print("✅ Finished processing")
 
 if __name__ == "__main__":
