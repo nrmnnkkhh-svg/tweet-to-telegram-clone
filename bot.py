@@ -6,14 +6,19 @@ TWITTER_USER   = "IranIntlBrk"
 TELEGRAM_CHAT  = "@CloneIntlbrk"
 TOKEN          = os.environ["TELEGRAM_BOT_TOKEN"]
 COOKIES        = os.environ["X_COOKIES_CLONE"]
+AI_API_KEY     = os.environ.get("AI_API_KEY", "")
 STATE_FILE     = "state.json"
 TEMPLATE_FILE  = "template.txt"
+CONTEXT_FILE   = "weekly_context.json"
 
 BURNER_USERNAME = "NRMNDIDI"
 
 SEPARATOR = "\n\n"
 MAX_RECENT_IDS = 500
 DELETION_CHECK_COUNT = 20
+
+GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama-3.1-8b-instant"
 
 api = API()
 
@@ -57,6 +62,77 @@ def load_template():
 def get_footer():
     template = load_template()
     return template.replace("{text}", "").strip()
+
+# ------------------------------------------------------------
+#  AI context loader
+# ------------------------------------------------------------
+def load_weekly_context() -> dict:
+    if os.path.exists(CONTEXT_FILE):
+        try:
+            with open(CONTEXT_FILE, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as exc:
+            print(f"⚠️  Could not parse {CONTEXT_FILE}: {exc}")
+    return {"topics": [], "week": "unknown"}
+
+# ------------------------------------------------------------
+#  AI classification
+# ------------------------------------------------------------
+async def classify_tweet(tweet_text: str) -> str:
+    """Calls Groq and returns 'IMPORTANT' or 'NON_IMPORTANT'."""
+    if not AI_API_KEY:
+        return "IMPORTANT"
+
+    ctx    = load_weekly_context()
+    topics = ctx.get("topics", [])
+    week   = ctx.get("week", "this week")
+
+    if topics:
+        topic_list   = "\n".join(f"- {t}" for t in topics)
+        context_part = f"Top Iran news topics for {week}:\n{topic_list}\n\n"
+    else:
+        context_part = ""
+
+    prompt = f"""{context_part}Tweet from @IranIntlBrk (Iran International breaking news):
+"{tweet_text}"
+
+Classify this tweet:
+IMPORTANT   = significant development: military strike, sanctions package, nuclear milestone, high-level political decision, mass casualty event, diplomat expulsion, proxy group major attack, leadership change
+NON_IMPORTANT = minor update, cultural/social news, sports, historical background, routine protest report, unverified rumor, celebrity statement, economic statistic without major context
+
+Reply with ONLY one word — either IMPORTANT or NON_IMPORTANT. No punctuation, no explanation."""
+
+    headers = {
+        "Authorization": f"Bearer {AI_API_KEY}",
+        "Content-Type":  "application/json"
+    }
+    payload = {
+        "model":       GROQ_MODEL,
+        "messages":    [{"role": "user", "content": prompt}],
+        "max_tokens":  6,
+        "temperature": 0
+    }
+
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as sess:
+            async with sess.post(GROQ_URL, headers=headers, json=payload) as resp:
+                if resp.status != 200:
+                    body = await resp.text()
+                    print(f"    ⚠️  Groq {resp.status}: {body[:120]} — default IMPORTANT")
+                    return "IMPORTANT"
+                data   = await resp.json()
+                result = data["choices"][0]["message"]["content"].strip().upper()
+
+        if "NON" in result or "NOT" in result or "UNIMPORT" in result:
+            return "NON_IMPORTANT"
+        return "IMPORTANT"
+
+    except asyncio.TimeoutError:
+        print("    ⚠️  Groq timeout — default IMPORTANT")
+        return "IMPORTANT"
+    except Exception as exc:
+        print(f"    ⚠️  Groq error: {exc} — default IMPORTANT")
+        return "IMPORTANT"
 
 # ------------------------------------------------------------
 #  Telegram helpers
@@ -149,6 +225,17 @@ def build_thread_text(texts: list[str], footer: str) -> str:
         combined += "\n\n" + footer
     return combined
 
+def format_ai_message(text: str, importance: str) -> str:
+    """Wrap tweet text with AI label at the top."""
+    safe = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    if importance == "IMPORTANT":
+        label = "🔴 &lt;Important&gt;"
+    else:
+        label = "⚪ &lt;Non-Important&gt;"
+    template = load_template()
+    # Insert label before the {text}
+    return template.replace("{text}", f"{label}\n{safe}")
+
 # ------------------------------------------------------------
 #  Deletion check
 # ------------------------------------------------------------
@@ -165,15 +252,13 @@ async def check_deleted_tweets(state, thread_map):
     newest_first = list(reversed(candidates))
     to_check = newest_first[:DELETION_CHECK_COUNT]
 
-    print(f"🔍 Checking {len(to_check)} tweets for deletion (prioritising recent)...")
+    print(f"🔍 Checking {len(to_check)} tweets for deletion...")
     for tid in to_check:
         try:
             tweet = await api.tweet_details(tid)
             if tweet is None:
                 print(f"🗑️  Tweet {tid} not found / deleted")
                 await handle_deleted_tweet(tid, state, thread_map, tweet_to_msg)
-            else:
-                pass
         except Exception as e:
             print(f"⚠️ Error checking tweet {tid}: {e}")
         await asyncio.sleep(1)
@@ -217,14 +302,18 @@ async def handle_deleted_tweet(tid: str, state, thread_map, tweet_to_msg):
                 del tweet_to_msg[tid]
                 if tid in state["recent_ids"]:
                     state["recent_ids"].remove(tid)
-            else:
-                print(f"⚠️ Failed to edit thread after deletion")
 
 # ------------------------------------------------------------
 #  Main
 # ------------------------------------------------------------
 async def main():
     print("🚀 Run started")
+    if AI_API_KEY:
+        ctx = load_weekly_context()
+        print(f"🤖 AI classification: ON  |  {len(ctx.get('topics',[]))} topics for {ctx.get('week','?')}")
+    else:
+        print("⚠️  AI classification: OFF (set AI_API_KEY)")
+
     try:
         await api.pool.add_account_cookies(BURNER_USERNAME, COOKIES)
         print("✅ Cookies loaded")
@@ -272,9 +361,16 @@ async def main():
     if new_tweets:
         new_tweets.sort(key=lambda x: x["id"])
         for tw in new_tweets:
+            # AI classification
+            importance = await classify_tweet(tw["text"])
+            print(f"  🤖 {importance}")
+
             conv_id = tw["conv_id"]
             existing = thread_map.get(conv_id)
+
             if existing and existing.get("msg_id"):
+                # We need to edit the thread message. Since the new tweet might have a different
+                # importance label, we just append the raw text (the overall message keeps its original label).
                 combined = build_thread_text(
                     existing.get("texts", []) + [tw["text"]],
                     footer
@@ -294,7 +390,7 @@ async def main():
                     await asyncio.sleep(1.5)
                 else:
                     combined = build_thread_text([tw["text"]], footer)
-                    msg_id = await send_message(combined)
+                    msg_id = await send_message(format_ai_message(tw["text"], importance))
                     if msg_id:
                         thread_map[conv_id] = {
                             "msg_id": msg_id,
@@ -314,7 +410,7 @@ async def main():
                         print("❌ Failed to send, stopping")
                         return
             else:
-                msg_text = format_single(tw["text"])
+                msg_text = format_ai_message(tw["text"], importance)
                 msg_id = await send_message(msg_text)
                 if msg_id:
                     thread_map[conv_id] = {
