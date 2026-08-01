@@ -46,6 +46,8 @@ def load_state():
             entry["texts"] = []
         if "combined" not in entry:
             entry["combined"] = entry.get("text", "")
+        if "importance" not in entry:
+            entry["importance"] = None
     return state
 
 def save_state(state):
@@ -226,27 +228,37 @@ def build_thread_text(texts: list[str], footer: str) -> str:
     return combined
 
 def format_ai_message(text: str, importance: str) -> str:
-    """Wrap tweet text with AI label at the top."""
+    """Wrap a single tweet with AI label at the top."""
     safe = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     if importance == "IMPORTANT":
         label = "🔴 &lt;Important&gt;"
     else:
         label = "⚪ &lt;Non-Important&gt;"
     template = load_template()
-    # Insert label before the {text}
     return template.replace("{text}", f"{label}\n{safe}")
+
+def format_thread_with_label(texts: list[str], importance: str, footer: str) -> str:
+    """Build a combined thread message with the AI label at the top, then all tweet texts, then footer."""
+    safe_texts = [t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") for t in texts]
+    if importance == "IMPORTANT":
+        label = "🔴 &lt;Important&gt;"
+    else:
+        label = "⚪ &lt;Non-Important&gt;"
+    combined = label + "\n" + SEPARATOR.join(safe_texts)
+    if footer:
+        combined += "\n\n" + footer
+    return combined
 
 # ------------------------------------------------------------
 #  Deletion check
 # ------------------------------------------------------------
-async def check_deleted_tweets(state, thread_map, skip_ids=None):
+async def check_deleted_tweets(state, thread_map):
     tweet_to_msg = state.get("tweet_to_msg", {})
     recent_ids = state.get("recent_ids", [])
     if not recent_ids:
         return
 
-    skip_set = set(skip_ids) if skip_ids else set()
-    candidates = [tid for tid in recent_ids if tid in tweet_to_msg and tid not in skip_set]
+    candidates = [tid for tid in recent_ids if tid in tweet_to_msg]
     if not candidates:
         return
 
@@ -296,7 +308,8 @@ async def handle_deleted_tweet(tid: str, state, thread_map, tweet_to_msg):
                         state["recent_ids"].remove(t)
         else:
             footer = get_footer()
-            combined = build_thread_text(texts, footer)
+            importance = thread_entry.get("importance") or "IMPORTANT"
+            combined = format_thread_with_label(texts, importance, footer)
             if await edit_message(msg_id, combined):
                 thread_entry["texts"] = texts
                 thread_entry["combined"] = combined
@@ -370,14 +383,20 @@ async def main():
             existing = thread_map.get(conv_id)
 
             if existing and existing.get("msg_id"):
-                # We need to edit the thread message. Since the new tweet might have a different
-                # importance label, we just append the raw text (the overall message keeps its original label).
-                combined = build_thread_text(
-                    existing.get("texts", []) + [tw["text"]],
-                    footer
-                )
+                # Edit existing thread message
+                # Ensure the importance is set (for old threads)
+                if not existing.get("importance"):
+                    existing["importance"] = importance   # classify first tweet if missing
+
+                # Add new text to the thread
+                new_texts = [tw["text"]]
+                all_texts = existing["texts"] + new_texts
+
+                # Rebuild with label using the thread's importance (from first tweet)
+                combined = format_thread_with_label(all_texts, existing["importance"], footer)
+
                 if await edit_message(existing["msg_id"], combined):
-                    existing["texts"].append(tw["text"])
+                    existing["texts"] = all_texts
                     existing["combined"] = combined
                     existing["last_tweet_id"] = str(tw["id"])
                     thread_map[conv_id] = existing
@@ -390,20 +409,22 @@ async def main():
                     }
                     await asyncio.sleep(1.5)
                 else:
-                    combined = build_thread_text([tw["text"]], footer)
-                    msg_id = await send_message(format_ai_message(tw["text"], importance))
+                    # Fallback: send new message (rare)
+                    combined = format_ai_message(tw["text"], importance)
+                    msg_id = await send_message(combined)
                     if msg_id:
                         thread_map[conv_id] = {
                             "msg_id": msg_id,
                             "last_tweet_id": str(tw["id"]),
                             "texts": [tw["text"]],
                             "combined": combined,
+                            "importance": importance
                         }
                         state["total_sent"] = state.get("total_sent", 0) + 1
                         tweet_to_msg[str(tw["id"])] = {
                             "msg_id": msg_id,
                             "conv_id": conv_id,
-                            "is_thread": True,
+                            "is_thread": False,
                             "text": tw["text"]
                         }
                         await asyncio.sleep(1.5)
@@ -411,6 +432,7 @@ async def main():
                         print("❌ Failed to send, stopping")
                         return
             else:
+                # New thread or standalone tweet
                 msg_text = format_ai_message(tw["text"], importance)
                 msg_id = await send_message(msg_text)
                 if msg_id:
@@ -419,6 +441,7 @@ async def main():
                         "last_tweet_id": str(tw["id"]),
                         "texts": [tw["text"]],
                         "combined": msg_text,
+                        "importance": importance
                     }
                     state["total_sent"] = state.get("total_sent", 0) + 1
                     tweet_to_msg[str(tw["id"])] = {
@@ -440,7 +463,8 @@ async def main():
     state["tweet_to_msg"] = tweet_to_msg
     save_state(state)
 
-    sent_ids = [str(tw["id"]) for tw in new_tweets]
+    # Perform deletion check (skip newly-sent tweets)
+    sent_ids = [str(tw["id"]) for tw in new_tweets] if new_tweets else []
     await check_deleted_tweets(state, thread_map, sent_ids)
     save_state(state)
     print(f"✅ Finished processing")
