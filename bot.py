@@ -439,7 +439,7 @@ async def main():
     save_state(state)
 
     # Deletion check
-    await check_deleted_tweets(state, thread_map)
+    #await check_deleted_tweets(state, thread_map)
     save_state(state)
     print("✅ Finished processing")
 
