@@ -239,13 +239,14 @@ def format_ai_message(text: str, importance: str) -> str:
 # ------------------------------------------------------------
 #  Deletion check
 # ------------------------------------------------------------
-async def check_deleted_tweets(state, thread_map):
+async def check_deleted_tweets(state, thread_map, skip_ids=None):
     tweet_to_msg = state.get("tweet_to_msg", {})
     recent_ids = state.get("recent_ids", [])
     if not recent_ids:
         return
 
-    candidates = [tid for tid in recent_ids if tid in tweet_to_msg]
+    skip_set = set(skip_ids) if skip_ids else set()
+    candidates = [tid for tid in recent_ids if tid in tweet_to_msg and tid not in skip_set]
     if not candidates:
         return
 
@@ -439,7 +440,8 @@ async def main():
     state["tweet_to_msg"] = tweet_to_msg
     save_state(state)
 
-    await check_deleted_tweets(state, thread_map)
+    sent_ids = [str(tw["id"]) for tw in new_tweets]
+    await check_deleted_tweets(state, thread_map, sent_ids)
     save_state(state)
     print(f"✅ Finished processing")
 
