@@ -21,18 +21,18 @@ jobs:
         env:
           X_COOKIES_CLONE: ${{ secrets.X_COOKIES_CLONE }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          BOT_INSTANCE: "clone"
         run: python bot.py
       - name: Commit updated state (with retry)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add state.json
+          git add state.json clone_bot.log clone_bot.log.1
           if git diff --staged --quiet; then
             echo "No state changes to commit."
             exit 0
           fi
-          git commit -m "Update state"
+          git commit -m "[clone] Update state and logs"
           for i in 1 2 3 4 5; do
             git pull --rebase origin main && git push && exit 0
             sleep $((2 * i))
