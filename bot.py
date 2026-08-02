@@ -1,3 +1,11 @@
+# ================== FEATURE FLAGS ==================
+FEATURE_THREAD_MERGE             = True    # Phase 4 – currently the only active feature
+FEATURE_AI_CLASSIFICATION        = False   # future
+FEATURE_DELETION_CHECK           = False   # future
+FEATURE_DUPLICATE_PREVENTION     = False   # future (recent_ids cache)
+FEATURE_PAUSE_MECHANISM          = False   # future
+# ===================================================
+
 import asyncio, json, os, random, traceback
 import aiohttp
 from twscrape import API
@@ -99,6 +107,12 @@ def build_thread_text(texts: list[str], footer: str) -> str:
 
 async def main():
     print("🚀 Run started")
+
+    # Pause mechanism flag (future)
+    if FEATURE_PAUSE_MECHANISM and os.path.exists("paused.txt"):
+        print("⏸️  Bot is paused (paused.txt). Exiting.")
+        return
+
     try:
         await api.pool.add_account_cookies(BURNER_USERNAME, COOKIES)
         print("✅ Cookies loaded")
@@ -150,7 +164,7 @@ async def main():
             conv_id = tw["conv_id"]
             existing = thread_map.get(conv_id)
 
-            if existing and existing.get("msg_id"):
+            if FEATURE_THREAD_MERGE and existing and existing.get("msg_id"):
                 all_texts = existing["texts"] + [tw["text"]]
                 combined = build_thread_text(all_texts, footer)
                 if await edit_message(existing["msg_id"], combined):
