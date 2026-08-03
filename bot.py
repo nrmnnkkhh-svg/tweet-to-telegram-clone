@@ -4,7 +4,7 @@ FEATURE_AI_CLASSIFICATION        = False
 FEATURE_DELETION_CHECK           = False
 FEATURE_DUPLICATE_PREVENTION     = False
 FEATURE_PAUSE_MECHANISM          = False
-FEATURE_SIMILARITY_DEDUP         = False
+FEATURE_SIMILARITY_DEDUP = True
 # ===================================================
 
 import asyncio, json, os, random, traceback
