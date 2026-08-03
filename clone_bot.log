@@ -2474,3 +2474,52 @@
 2026-08-03T15:15:38Z | DEBUG    | main                 | -                      | Teardown complete — state saved
 2026-08-03T15:15:38Z | INFO     | main                 | -                      | 📊 sent=0 skipped=1 failed=0
 2026-08-03T15:15:38Z | INFO     | main                 | -                      | 🏁 Complete in 3.2s
+2026-08-03T15:20:35Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:20:35Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-03T15:20:35Z | INFO     | main                 | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:20:35Z | INFO     | main                 | -                      | 🚀 Run | instance='clone' | channel='@CloneIntlbrk'
+2026-08-03T15:20:35Z | INFO     | main                 | -                      | 🏁 Features ON:  ['duplicate_filter', 'message_formatter', 'telegram_sender', 'ai_classifier', 'deletion_checker', 'thread_merger']
+2026-08-03T15:20:35Z | INFO     | main                 | -                      | ⏸️  Features OFF: ['media_handler']
+2026-08-03T15:20:35Z | DEBUG    | main                 | -                      | [duplicate_filter] State loaded: state_duplicate_filter.json (1 keys)
+2026-08-03T15:20:35Z | DEBUG    | main                 | -                      | Setup complete | state=ProcessorState(state_duplicate_filter.json, 1 keys)
+2026-08-03T15:20:35Z | INFO     | main                 | -                      | 📌 Watermark (since_id): 2084295704856400239
+2026-08-03T15:20:35Z | INFO     | fetch_new_tweets     | -                      | Account 'NRMNDIDI' loaded
+2026-08-03T15:20:35Z | DEBUG    | fetch_new_tweets     | -                      | Query: from:IranIntlBrk -filter:replies -filter:retweets since_id:2084295704856400239
+2026-08-03T15:20:36Z | INFO     | fetch_new_tweets     | -                      | 📬 1 new tweet(s)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Registered: DuplicateFilter[duplicate_filter|!critical]
+2026-08-03T15:20:36Z | WARNING  | fetch_new_tweets     | -                      | weekly_context.json not found — AI will classify without weekly context
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Registered: AIClassifier[ai_classifier|⚡fault-tolerant]
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | ai_classifier: registered
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Registered: ThreadMerger[thread_merger|⚡fault-tolerant]
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | thread_merger: registered
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Registered: DeletionChecker[deletion_checker|⚡fault-tolerant]
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Registered: MessageFormatter[message_formatter|!critical]
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Registered: TelegramSender[telegram_sender|!critical depends=['message_formatter']]
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | [ai_classifier] State loaded: state_ai_classifier.json (0 keys)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_ai_classifier.json, 0 keys)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | [thread_merger] No state file yet — starting empty
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_thread_merger.json, 0 keys)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | [deletion_checker] State loaded: state_deletion_checker.json (0 keys)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_deletion_checker.json, 0 keys)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | [message_formatter] State loaded: state_message_formatter.json (0 keys)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_message_formatter.json, 0 keys)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | [telegram_sender] State loaded: state_telegram_sender.json (0 keys)
+2026-08-03T15:20:36Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_telegram_sender.json, 0 keys)
+2026-08-03T15:20:36Z | INFO     | fetch_new_tweets     | -                      | Pipeline: [duplicate_filter!] → [ai_classifier⚡] → [thread_merger⚡] → [deletion_checker⚡] → [message_formatter!] → [telegram_sender!]
+2026-08-03T15:20:36Z | INFO     | pipeline             | 2084296672138477688    | Processing: سایت کردپا به نقل از یک منبع آگاه نوشت امید بهزاد، شهروند ۲۱ ساله اهل …
+2026-08-03T15:20:36Z | DEBUG    | pipeline             | 2084296672138477688    | New tweet confirmed: 2084296672138477688 > watermark=2084295704856400239
+2026-08-03T15:20:36Z | DEBUG    | pipeline             | 2084296672138477688    | ✅ duplicate_filter: complete (forward=True, meta_keys=['conv_id'])
+2026-08-03T15:20:36Z | DEBUG    | pipeline             | 2084296672138477688    | No API key — defaulting to IMPORTANT
+2026-08-03T15:20:36Z | DEBUG    | pipeline             | 2084296672138477688    | ✅ ai_classifier: complete (forward=True, meta_keys=['conv_id', 'importance'])
+2026-08-03T15:20:37Z | INFO     | pipeline             | 2084296672138477688    | New thread 2084296672138477688: sent msg 1183
+2026-08-03T15:20:37Z | DEBUG    | pipeline             | 2084296672138477688    | ✅ thread_merger: complete (forward=False, meta_keys=['conv_id', 'importance'])
+2026-08-03T15:20:37Z | DEBUG    | pipeline             | 2084296672138477688    | Pipeline already stopped before 'deletion_checker' — reason: 'thread_merger: first tweet sent'
+2026-08-03T15:20:37Z | INFO     | pipeline             | 2084296672138477688    | Skipped: thread_merger: first tweet sent
+2026-08-03T15:20:38Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:20:38Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:20:38Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:20:38Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:20:38Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:20:38Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:20:38Z | INFO     | main                 | -                      | 📊 sent=0 skipped=1 failed=0
+2026-08-03T15:20:38Z | INFO     | main                 | -                      | 🏁 Complete in 3.5s
