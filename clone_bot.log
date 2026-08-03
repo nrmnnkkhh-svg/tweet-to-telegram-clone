@@ -2350,3 +2350,52 @@
 2026-08-03T15:05:33Z | DEBUG    | main                 | -                      | Teardown complete — state saved
 2026-08-03T15:05:33Z | INFO     | main                 | -                      | 📊 sent=2 skipped=0 failed=0
 2026-08-03T15:05:33Z | INFO     | main                 | -                      | 🏁 Complete in 5.1s
+2026-08-03T15:10:39Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:10:39Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-03T15:10:39Z | INFO     | main                 | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:10:39Z | INFO     | main                 | -                      | 🚀 Run | instance='clone' | channel='@CloneIntlbrk'
+2026-08-03T15:10:39Z | INFO     | main                 | -                      | 🏁 Features ON:  ['duplicate_filter', 'message_formatter', 'telegram_sender', 'ai_classifier', 'deletion_checker']
+2026-08-03T15:10:39Z | INFO     | main                 | -                      | ⏸️  Features OFF: ['thread_merger', 'media_handler']
+2026-08-03T15:10:39Z | DEBUG    | main                 | -                      | [duplicate_filter] State loaded: state_duplicate_filter.json (1 keys)
+2026-08-03T15:10:39Z | DEBUG    | main                 | -                      | Setup complete | state=ProcessorState(state_duplicate_filter.json, 1 keys)
+2026-08-03T15:10:39Z | INFO     | main                 | -                      | 📌 Watermark (since_id): 2084294475057078671
+2026-08-03T15:10:39Z | INFO     | fetch_new_tweets     | -                      | Account 'NRMNDIDI' loaded
+2026-08-03T15:10:39Z | DEBUG    | fetch_new_tweets     | -                      | Query: from:IranIntlBrk -filter:replies -filter:retweets since_id:2084294475057078671
+2026-08-03T15:10:39Z | DEBUG    | fetch_new_tweets     | -                      | Found: 2084295704856400239 — بنیامین نتانیاهو در گفت‌وگو با برنامه «نگهبان مرز»…
+2026-08-03T15:10:40Z | INFO     | fetch_new_tweets     | -                      | 📬 1 new tweet(s)
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Registered: DuplicateFilter[duplicate_filter|!critical]
+2026-08-03T15:10:40Z | WARNING  | fetch_new_tweets     | -                      | weekly_context.json not found — AI will classify without weekly context
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Registered: AIClassifier[ai_classifier|⚡fault-tolerant]
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | ai_classifier: registered
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Registered: DeletionChecker[deletion_checker|⚡fault-tolerant]
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | deletion_checker: registered
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Registered: MessageFormatter[message_formatter|!critical]
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Registered: TelegramSender[telegram_sender|!critical depends=['message_formatter']]
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | [ai_classifier] State loaded: state_ai_classifier.json (0 keys)
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_ai_classifier.json, 0 keys)
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | [deletion_checker] State loaded: state_deletion_checker.json (0 keys)
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_deletion_checker.json, 0 keys)
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | [message_formatter] State loaded: state_message_formatter.json (0 keys)
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_message_formatter.json, 0 keys)
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | [telegram_sender] State loaded: state_telegram_sender.json (0 keys)
+2026-08-03T15:10:40Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_telegram_sender.json, 0 keys)
+2026-08-03T15:10:40Z | INFO     | fetch_new_tweets     | -                      | Pipeline: [duplicate_filter!] → [ai_classifier⚡] → [deletion_checker⚡] → [message_formatter!] → [telegram_sender!]
+2026-08-03T15:10:40Z | INFO     | pipeline             | 2084295704856400239    | Processing: بنیامین نتانیاهو در گفت‌وگو با برنامه «نگهبان مرز» گفت: خاورمیانه دیگر…
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | New tweet confirmed: 2084295704856400239 > watermark=2084294475057078671
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | ✅ duplicate_filter: complete (forward=True, meta_keys=[])
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | No API key — defaulting to IMPORTANT
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | ✅ ai_classifier: complete (forward=True, meta_keys=['importance'])
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | Deletion check: 2084295704856400239 → unchecked (stub)
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | ✅ deletion_checker: complete (forward=True, meta_keys=['importance', 'deletion_status'])
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | Formatted (importance=IMPORTANT)
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | ✅ message_formatter: complete (forward=True, meta_keys=['importance', 'deletion_status', 'formatted_message', 'tweet_link'])
+2026-08-03T15:10:40Z | INFO     | pipeline             | 2084295704856400239    | ✅ Sent to @CloneIntlbrk
+2026-08-03T15:10:40Z | INFO     | pipeline             | 2084295704856400239    | Watermark: 2084294475057078671 → 2084295704856400239
+2026-08-03T15:10:40Z | DEBUG    | pipeline             | 2084295704856400239    | ✅ telegram_sender: complete (forward=True, meta_keys=['importance', 'deletion_status', 'formatted_message', 'tweet_link'])
+2026-08-03T15:10:42Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:10:42Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:10:42Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:10:42Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:10:42Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:10:42Z | INFO     | main                 | -                      | 📊 sent=1 skipped=0 failed=0
+2026-08-03T15:10:42Z | INFO     | main                 | -                      | 🏁 Complete in 3.2s
