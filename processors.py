@@ -320,3 +320,158 @@ class DeletionChecker(BaseProcessor):
         ctx.metadata["deletion_status"] = "unchecked"
         self._log.debug(f"Deletion check: {ctx.tweet_id} → unchecked (stub)")
         return ctx
+
+
+# ─────────────────────────────────────────────────────────────
+#  Processor 6 — ThreadMerger
+# ─────────────────────────────────────────────────────────────
+class ThreadMerger(BaseProcessor):
+    """
+    Merges tweets belonging to the same thread into one Telegram message.
+
+    - First tweet of a thread: sends a normal message and records it.
+    - Subsequent tweets: edits the existing message to append the new text.
+    - When enabled, this processor REPLACES MessageFormatter + TelegramSender
+      for thread tweets (they are never called for those tweets).
+    - Non‑thread tweets pass through unchanged and are handled by the normal
+      formatter + sender.
+
+    Fault‑tolerant: if editing fails (e.g. message too old), it falls back
+    to sending a new message.
+    """
+    name:           str       = "thread_merger"
+    fault_tolerant: bool      = True
+    depends_on:     list[str] = []
+
+    SEPARATOR = "\n\n"
+
+    def __init__(self, twitter_user: str, channel: str, bot_token: str) -> None:
+        super().__init__()
+        self._twitter_user = twitter_user
+        self._channel      = channel
+        self._token        = bot_token
+
+    # ── Helpers ──────────────────────────────────────────────
+    def _load_template(self) -> str:
+        """Read the channel template (template.txt)."""
+        try:
+            with open("template.txt", "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except Exception:
+            return "{text}\n\n🆔 @Intlbrk"   # fallback
+
+    def _get_footer(self) -> str:
+        return self._load_template().replace("{text}", "").strip()
+
+    async def _send_message(self, text: str) -> int | None:
+        """Send a new message to the channel. Returns message_id or None."""
+        url = f"https://api.telegram.org/bot{self._token}/sendMessage"
+        payload = {"chat_id": self._channel, "text": text, "disable_web_page_preview": True}
+        for attempt in range(1, 6):
+            try:
+                async with aiohttp.ClientSession() as sess:
+                    async with sess.post(url, json=payload) as resp:
+                        data = await resp.json()
+                        if data.get("ok"):
+                            return data["result"]["message_id"]
+                        if data.get("error_code") == 429:
+                            wait = data.get("parameters", {}).get("retry_after", 10)
+                            self._log.warning(f"Rate limited — waiting {wait}s")
+                            await asyncio.sleep(wait + 2)
+                            continue
+                        self._log.error(f"Send error: {data}")
+                        return None
+            except Exception as exc:
+                self._log.error(f"Send attempt {attempt} failed: {exc}")
+                await asyncio.sleep(2 ** attempt)
+        return None
+
+    async def _edit_message(self, msg_id: int, new_text: str) -> bool:
+        """Edit an existing message. Returns True on success."""
+        url = f"https://api.telegram.org/bot{self._token}/editMessageText"
+        payload = {"chat_id": self._channel, "message_id": msg_id, "text": new_text, "disable_web_page_preview": True}
+        for attempt in range(1, 6):
+            try:
+                async with aiohttp.ClientSession() as sess:
+                    async with sess.post(url, json=payload) as resp:
+                        data = await resp.json()
+                        if data.get("ok"):
+                            return True
+                        if data.get("error_code") == 429:
+                            wait = data.get("parameters", {}).get("retry_after", 10)
+                            self._log.warning(f"Edit rate limited — waiting {wait}s")
+                            await asyncio.sleep(wait + 2)
+                            continue
+                        self._log.error(f"Edit error: {data}")
+                        return False
+            except Exception as exc:
+                self._log.error(f"Edit attempt {attempt} failed: {exc}")
+                await asyncio.sleep(2 ** attempt)
+        return False
+
+    def _format_single(self, text: str) -> str:
+        """Format a single tweet using the channel template."""
+        safe = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        return self._load_template().replace("{text}", safe)
+
+    def _build_combined(self, texts: list[str], footer: str) -> str:
+        """Combine multiple tweet texts into one message, footer only at the end."""
+        safe_texts = [t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") for t in texts]
+        combined = self.SEPARATOR.join(safe_texts)
+        if footer:
+            combined += "\n\n" + footer
+        return combined
+
+    # ── Core logic ───────────────────────────────────────────
+    async def process(self, ctx: TweetContext) -> TweetContext:
+        conv_id = ctx.metadata.get("conv_id") or ctx.tweet_id   # fallback: own ID
+        existing = self.state.all().get(conv_id)                 # dict or None
+
+        # --- First tweet of a new thread ---
+        if not existing:
+            footer = self._get_footer()
+            msg_text = self._format_single(ctx.raw_text)
+            msg_id = await self._send_message(msg_text)
+            if msg_id:
+                self.state.set(conv_id, {
+                    "msg_id": msg_id,
+                    "last_tweet_id": ctx.tweet_id,
+                    "texts": [ctx.raw_text],
+                })
+                self.state.save()
+                self._log.info(f"New thread {conv_id}: sent msg {msg_id}")
+                ctx.stop("thread_merger: first tweet sent")   # prevent normal send
+            else:
+                self._log.error(f"Failed to send first tweet of thread {conv_id} – letting pipeline continue")
+                # Fallback: let normal MessageFormatter + TelegramSender handle it
+            return ctx
+
+        # --- Subsequent tweet in an existing thread ---
+        # Append the new text
+        new_texts = existing["texts"] + [ctx.raw_text]
+        footer = self._get_footer()
+        combined = self._build_combined(new_texts, footer)
+
+        if await self._edit_message(existing["msg_id"], combined):
+            existing["texts"] = new_texts
+            existing["last_tweet_id"] = ctx.tweet_id
+            self.state.set(conv_id, existing)
+            self.state.save()
+            self._log.info(f"Thread {conv_id}: edited msg {existing['msg_id']}")
+            ctx.stop("thread_merger: appended to existing thread")
+        else:
+            # Edit failed – fallback: send a new message for this thread update
+            self._log.warning(f"Edit failed for thread {conv_id}, sending new message")
+            msg_id = await self._send_message(combined)
+            if msg_id:
+                self.state.set(conv_id, {
+                    "msg_id": msg_id,
+                    "last_tweet_id": ctx.tweet_id,
+                    "texts": new_texts,
+                })
+                self.state.save()
+                ctx.stop("thread_merger: sent new message after edit failure")
+            # If even the fallback fails, we leave ctx.should_forward=True
+            # and let the pipeline continue normally (rare).
+
+        return ctx
