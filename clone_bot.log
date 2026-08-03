@@ -2288,3 +2288,65 @@
 2026-08-03T15:00:35Z | DEBUG    | main                 | -                      | Teardown complete — state saved
 2026-08-03T15:00:35Z | INFO     | main                 | -                      | 📊 sent=1 skipped=0 failed=0
 2026-08-03T15:00:35Z | INFO     | main                 | -                      | 🏁 Complete in 3.3s
+2026-08-03T15:05:28Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:05:28Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-03T15:05:28Z | INFO     | main                 | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:05:28Z | INFO     | main                 | -                      | 🚀 Run | instance='clone' | channel='@CloneIntlbrk'
+2026-08-03T15:05:28Z | INFO     | main                 | -                      | 🏁 Features ON:  ['duplicate_filter', 'message_formatter', 'telegram_sender', 'ai_classifier', 'deletion_checker']
+2026-08-03T15:05:28Z | INFO     | main                 | -                      | ⏸️  Features OFF: ['thread_merger', 'media_handler']
+2026-08-03T15:05:28Z | DEBUG    | main                 | -                      | [duplicate_filter] State loaded: state_duplicate_filter.json (1 keys)
+2026-08-03T15:05:28Z | DEBUG    | main                 | -                      | Setup complete | state=ProcessorState(state_duplicate_filter.json, 1 keys)
+2026-08-03T15:05:28Z | INFO     | main                 | -                      | 📌 Watermark (since_id): 2084290929511350538
+2026-08-03T15:05:28Z | INFO     | fetch_new_tweets     | -                      | Account 'NRMNDIDI' loaded
+2026-08-03T15:05:28Z | DEBUG    | fetch_new_tweets     | -                      | Query: from:IranIntlBrk -filter:replies -filter:retweets since_id:2084290929511350538
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Found: 2084294475057078671 — خبرگزاری دولتی ایرنا گزارش داد عباس عراقچی، وزیر خ…
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Found: 2084293497889177777 — مدیرکل دفتر مهندسی و راهبردی شبکه توزیع شرکت توانی…
+2026-08-03T15:05:29Z | INFO     | fetch_new_tweets     | -                      | 📬 2 new tweet(s)
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Registered: DuplicateFilter[duplicate_filter|!critical]
+2026-08-03T15:05:29Z | WARNING  | fetch_new_tweets     | -                      | weekly_context.json not found — AI will classify without weekly context
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Registered: AIClassifier[ai_classifier|⚡fault-tolerant]
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | ai_classifier: registered
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Registered: DeletionChecker[deletion_checker|⚡fault-tolerant]
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | deletion_checker: registered
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Registered: MessageFormatter[message_formatter|!critical]
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Registered: TelegramSender[telegram_sender|!critical depends=['message_formatter']]
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | [ai_classifier] State loaded: state_ai_classifier.json (0 keys)
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_ai_classifier.json, 0 keys)
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | [deletion_checker] State loaded: state_deletion_checker.json (0 keys)
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_deletion_checker.json, 0 keys)
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | [message_formatter] State loaded: state_message_formatter.json (0 keys)
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_message_formatter.json, 0 keys)
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | [telegram_sender] State loaded: state_telegram_sender.json (0 keys)
+2026-08-03T15:05:29Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_telegram_sender.json, 0 keys)
+2026-08-03T15:05:29Z | INFO     | fetch_new_tweets     | -                      | Pipeline: [duplicate_filter!] → [ai_classifier⚡] → [deletion_checker⚡] → [message_formatter!] → [telegram_sender!]
+2026-08-03T15:05:29Z | INFO     | pipeline             | 2084293497889177777    | Processing: مدیرکل دفتر مهندسی و راهبردی شبکه توزیع شرکت توانیر گفت از این هفته بر…
+2026-08-03T15:05:29Z | DEBUG    | pipeline             | 2084293497889177777    | New tweet confirmed: 2084293497889177777 > watermark=2084290929511350538
+2026-08-03T15:05:29Z | DEBUG    | pipeline             | 2084293497889177777    | ✅ duplicate_filter: complete (forward=True, meta_keys=[])
+2026-08-03T15:05:29Z | DEBUG    | pipeline             | 2084293497889177777    | No API key — defaulting to IMPORTANT
+2026-08-03T15:05:29Z | DEBUG    | pipeline             | 2084293497889177777    | ✅ ai_classifier: complete (forward=True, meta_keys=['importance'])
+2026-08-03T15:05:29Z | DEBUG    | pipeline             | 2084293497889177777    | Deletion check: 2084293497889177777 → unchecked (stub)
+2026-08-03T15:05:29Z | DEBUG    | pipeline             | 2084293497889177777    | ✅ deletion_checker: complete (forward=True, meta_keys=['importance', 'deletion_status'])
+2026-08-03T15:05:29Z | DEBUG    | pipeline             | 2084293497889177777    | Formatted (importance=IMPORTANT)
+2026-08-03T15:05:29Z | DEBUG    | pipeline             | 2084293497889177777    | ✅ message_formatter: complete (forward=True, meta_keys=['importance', 'deletion_status', 'formatted_message', 'tweet_link'])
+2026-08-03T15:05:30Z | INFO     | pipeline             | 2084293497889177777    | ✅ Sent to @CloneIntlbrk
+2026-08-03T15:05:30Z | INFO     | pipeline             | 2084293497889177777    | Watermark: 2084290929511350538 → 2084293497889177777
+2026-08-03T15:05:30Z | DEBUG    | pipeline             | 2084293497889177777    | ✅ telegram_sender: complete (forward=True, meta_keys=['importance', 'deletion_status', 'formatted_message', 'tweet_link'])
+2026-08-03T15:05:31Z | INFO     | pipeline             | 2084294475057078671    | Processing: خبرگزاری دولتی ایرنا گزارش داد عباس عراقچی، وزیر خارجه جمهوری اسلامی، …
+2026-08-03T15:05:31Z | DEBUG    | pipeline             | 2084294475057078671    | New tweet confirmed: 2084294475057078671 > watermark=2084293497889177777
+2026-08-03T15:05:31Z | DEBUG    | pipeline             | 2084294475057078671    | ✅ duplicate_filter: complete (forward=True, meta_keys=[])
+2026-08-03T15:05:31Z | DEBUG    | pipeline             | 2084294475057078671    | No API key — defaulting to IMPORTANT
+2026-08-03T15:05:31Z | DEBUG    | pipeline             | 2084294475057078671    | ✅ ai_classifier: complete (forward=True, meta_keys=['importance'])
+2026-08-03T15:05:31Z | DEBUG    | pipeline             | 2084294475057078671    | Deletion check: 2084294475057078671 → unchecked (stub)
+2026-08-03T15:05:31Z | DEBUG    | pipeline             | 2084294475057078671    | ✅ deletion_checker: complete (forward=True, meta_keys=['importance', 'deletion_status'])
+2026-08-03T15:05:31Z | DEBUG    | pipeline             | 2084294475057078671    | Formatted (importance=IMPORTANT)
+2026-08-03T15:05:31Z | DEBUG    | pipeline             | 2084294475057078671    | ✅ message_formatter: complete (forward=True, meta_keys=['importance', 'deletion_status', 'formatted_message', 'tweet_link'])
+2026-08-03T15:05:32Z | INFO     | pipeline             | 2084294475057078671    | ✅ Sent to @CloneIntlbrk
+2026-08-03T15:05:32Z | INFO     | pipeline             | 2084294475057078671    | Watermark: 2084293497889177777 → 2084294475057078671
+2026-08-03T15:05:32Z | DEBUG    | pipeline             | 2084294475057078671    | ✅ telegram_sender: complete (forward=True, meta_keys=['importance', 'deletion_status', 'formatted_message', 'tweet_link'])
+2026-08-03T15:05:33Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:05:33Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:05:33Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:05:33Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:05:33Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:05:33Z | INFO     | main                 | -                      | 📊 sent=2 skipped=0 failed=0
+2026-08-03T15:05:33Z | INFO     | main                 | -                      | 🏁 Complete in 5.1s
