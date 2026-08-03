@@ -2412,3 +2412,16 @@
 2026-08-03T15:11:08Z | DEBUG    | fetch_new_tweets     | -                      | Query: from:IranIntlBrk -filter:replies -filter:retweets since_id:2084295704856400239
 2026-08-03T15:11:09Z | INFO     | fetch_new_tweets     | -                      | ✓ No new tweets this run.
 2026-08-03T15:11:09Z | INFO     | fetch_new_tweets     | -                      | 🏁 Complete in 0.9s
+2026-08-03T15:11:53Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:11:53Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-03T15:11:53Z | INFO     | main                 | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:11:53Z | INFO     | main                 | -                      | 🚀 Run | instance='clone' | channel='@CloneIntlbrk'
+2026-08-03T15:11:53Z | INFO     | main                 | -                      | 🏁 Features ON:  ['duplicate_filter', 'message_formatter', 'telegram_sender', 'ai_classifier', 'deletion_checker', 'thread_merger']
+2026-08-03T15:11:53Z | INFO     | main                 | -                      | ⏸️  Features OFF: ['media_handler']
+2026-08-03T15:11:53Z | DEBUG    | main                 | -                      | [duplicate_filter] State loaded: state_duplicate_filter.json (1 keys)
+2026-08-03T15:11:53Z | DEBUG    | main                 | -                      | Setup complete | state=ProcessorState(state_duplicate_filter.json, 1 keys)
+2026-08-03T15:11:53Z | INFO     | main                 | -                      | 📌 Watermark (since_id): 2084295704856400239
+2026-08-03T15:11:53Z | INFO     | fetch_new_tweets     | -                      | Account 'NRMNDIDI' loaded
+2026-08-03T15:11:53Z | DEBUG    | fetch_new_tweets     | -                      | Query: from:IranIntlBrk -filter:replies -filter:retweets since_id:2084295704856400239
+2026-08-03T15:11:55Z | INFO     | fetch_new_tweets     | -                      | ✓ No new tweets this run.
+2026-08-03T15:11:55Z | INFO     | fetch_new_tweets     | -                      | 🏁 Complete in 1.4s
