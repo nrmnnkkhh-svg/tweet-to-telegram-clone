@@ -4,9 +4,11 @@ FEATURE_AI_CLASSIFICATION        = False
 FEATURE_DELETION_CHECK           = False
 FEATURE_DUPLICATE_PREVENTION     = False
 FEATURE_PAUSE_MECHANISM          = False
+FEATURE_SIMILARITY_DEDUP         = False
 # ===================================================
 
 import asyncio, json, os, random, traceback
+from difflib import SequenceMatcher
 import aiohttp
 from twscrape import API
 
@@ -47,6 +49,10 @@ def load_template():
 def get_footer():
     template = load_template()
     return template.replace("{text}", "").strip()
+
+def is_similar(text1: str, text2: str, threshold: float = 0.7) -> bool:
+    """Return True if text1 and text2 are at least `threshold` similar."""
+    return SequenceMatcher(None, text1, text2).ratio() >= threshold
 
 async def send_message(text: str, tweet_id: str) -> int | None:
     log = get_logger("send_message")
@@ -99,6 +105,30 @@ async def edit_message(msg_id: int, new_text: str) -> bool:
         except Exception as exc:
             log_exception(log, exc, f"Edit error (attempt {attempt+1})")
             await asyncio.sleep(2 ** attempt + random.uniform(0, 2))
+    return False
+
+async def delete_message(msg_id: int) -> bool:
+    log = get_logger("delete_message")
+    url = f"https://api.telegram.org/bot{TOKEN}/deleteMessage"
+    payload = {"chat_id": TELEGRAM_CHAT, "message_id": msg_id}
+    for attempt in range(3):
+        try:
+            async with aiohttp.ClientSession() as sess:
+                async with sess.post(url, json=payload) as resp:
+                    data = await resp.json()
+                    if data.get("ok"):
+                        log.info(f"Deleted msg {msg_id}")
+                        return True
+                    if data.get("error_code") == 429:
+                        wait = data.get("parameters", {}).get("retry_after", 10)
+                        log.warning(f"Delete rate limited. Waiting {wait}s")
+                        await asyncio.sleep(wait + 2)
+                        continue
+                    log.error(f"Delete error: {data}")
+                    return False
+        except Exception as exc:
+            log_exception(log, exc, f"Delete error (attempt {attempt+1})")
+            await asyncio.sleep(2 ** attempt)
     return False
 
 def build_thread_text(texts: list[str], footer: str) -> str:
@@ -166,6 +196,22 @@ async def main():
             existing = thread_map.get(conv_id)
             set_log_context(section="process_tweet", tweet_id=str(tw["id"]))
 
+            # ── Similarity dedup check ─────────────────────────
+            # Only if the feature is ON, and the new tweet is part of an existing thread
+            if FEATURE_SIMILARITY_DEDUP and existing and existing.get("msg_id"):
+                last_text_in_thread = existing["texts"][-1] if existing["texts"] else ""
+                if last_text_in_thread and is_similar(tw["text"], last_text_in_thread):
+                    log.info(f"Similarity dedup triggered – deleting old msg {existing['msg_id']} and sending new tweet")
+                    # Delete the old Telegram message
+                    if await delete_message(existing["msg_id"]):
+                        # Remove thread entry so it's no longer tracked
+                        del thread_map[conv_id]
+                        # Fall through to send as standalone tweet
+                        existing = None
+                    else:
+                        log.error("Failed to delete old message – keeping both")
+
+            # ── Thread merge or send new ───────────────────────
             if FEATURE_THREAD_MERGE and existing and existing.get("msg_id"):
                 all_texts = existing["texts"] + [tw["text"]]
                 combined = build_thread_text(all_texts, footer)
