@@ -2238,3 +2238,53 @@
 2026-08-03T14:50:40Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2084235177027338526
 2026-08-03T14:50:40Z | INFO     | main                 | -                      | No new tweets
 2026-08-03T14:50:40Z | INFO     | main                 | -                      | Run complete
+2026-08-03T15:00:32Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:00:32Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-03T15:00:32Z | INFO     | main                 | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-03T15:00:32Z | INFO     | main                 | -                      | 🚀 Run | instance='clone' | channel='@CloneIntlbrk'
+2026-08-03T15:00:32Z | INFO     | main                 | -                      | 🏁 Features ON:  ['duplicate_filter', 'message_formatter', 'telegram_sender', 'ai_classifier', 'deletion_checker']
+2026-08-03T15:00:32Z | INFO     | main                 | -                      | ⏸️  Features OFF: ['thread_merger', 'media_handler']
+2026-08-03T15:00:32Z | DEBUG    | main                 | -                      | [duplicate_filter] No state file yet — starting empty
+2026-08-03T15:00:32Z | DEBUG    | main                 | -                      | Setup complete | state=ProcessorState(state_duplicate_filter.json, 0 keys)
+2026-08-03T15:00:32Z | INFO     | main                 | -                      | Migrated state.json → state_duplicate_filter.json (last_seen_tweet_id='2084289053529153820')
+2026-08-03T15:00:32Z | INFO     | main                 | -                      | 📌 Watermark (since_id): 2084289053529153820
+2026-08-03T15:00:32Z | INFO     | fetch_new_tweets     | -                      | Account 'NRMNDIDI' loaded
+2026-08-03T15:00:32Z | DEBUG    | fetch_new_tweets     | -                      | Query: from:IranIntlBrk -filter:replies -filter:retweets since_id:2084289053529153820
+2026-08-03T15:00:33Z | DEBUG    | fetch_new_tweets     | -                      | Found: 2084290929511350538 — محمد اسحاق‌دار، معاون نخست‌وزیر و وزیر خارجه پاکست…
+2026-08-03T15:00:34Z | INFO     | fetch_new_tweets     | -                      | 📬 1 new tweet(s)
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Registered: DuplicateFilter[duplicate_filter|!critical]
+2026-08-03T15:00:34Z | WARNING  | fetch_new_tweets     | -                      | weekly_context.json not found — AI will classify without weekly context
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Registered: AIClassifier[ai_classifier|⚡fault-tolerant]
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | ai_classifier: registered
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Registered: DeletionChecker[deletion_checker|⚡fault-tolerant]
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | deletion_checker: registered
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Registered: MessageFormatter[message_formatter|!critical]
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Registered: TelegramSender[telegram_sender|!critical depends=['message_formatter']]
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | [ai_classifier] No state file yet — starting empty
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_ai_classifier.json, 0 keys)
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | [deletion_checker] No state file yet — starting empty
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_deletion_checker.json, 0 keys)
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | [message_formatter] No state file yet — starting empty
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_message_formatter.json, 0 keys)
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | [telegram_sender] No state file yet — starting empty
+2026-08-03T15:00:34Z | DEBUG    | fetch_new_tweets     | -                      | Setup complete | state=ProcessorState(state_telegram_sender.json, 0 keys)
+2026-08-03T15:00:34Z | INFO     | fetch_new_tweets     | -                      | Pipeline: [duplicate_filter!] → [ai_classifier⚡] → [deletion_checker⚡] → [message_formatter!] → [telegram_sender!]
+2026-08-03T15:00:34Z | INFO     | pipeline             | 2084290929511350538    | Processing: محمد اسحاق‌دار، معاون نخست‌وزیر و وزیر خارجه پاکستان، در تماس تلفنی با…
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | New tweet confirmed: 2084290929511350538 > watermark=2084289053529153820
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | ✅ duplicate_filter: complete (forward=True, meta_keys=[])
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | No API key — defaulting to IMPORTANT
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | ✅ ai_classifier: complete (forward=True, meta_keys=['importance'])
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | Deletion check: 2084290929511350538 → unchecked (stub)
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | ✅ deletion_checker: complete (forward=True, meta_keys=['importance', 'deletion_status'])
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | Formatted (importance=IMPORTANT)
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | ✅ message_formatter: complete (forward=True, meta_keys=['importance', 'deletion_status', 'formatted_message', 'tweet_link'])
+2026-08-03T15:00:34Z | INFO     | pipeline             | 2084290929511350538    | ✅ Sent to @CloneIntlbrk
+2026-08-03T15:00:34Z | INFO     | pipeline             | 2084290929511350538    | Watermark: 2084289053529153820 → 2084290929511350538
+2026-08-03T15:00:34Z | DEBUG    | pipeline             | 2084290929511350538    | ✅ telegram_sender: complete (forward=True, meta_keys=['importance', 'deletion_status', 'formatted_message', 'tweet_link'])
+2026-08-03T15:00:35Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:00:35Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:00:35Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:00:35Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:00:35Z | DEBUG    | main                 | -                      | Teardown complete — state saved
+2026-08-03T15:00:35Z | INFO     | main                 | -                      | 📊 sent=1 skipped=0 failed=0
+2026-08-03T15:00:35Z | INFO     | main                 | -                      | 🏁 Complete in 3.3s
