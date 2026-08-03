@@ -29,7 +29,7 @@ FEATURES: dict[str, bool] = {
 
     # ── In development (enable on clone only) ─────────────────
     "deletion_checker":  False,    # Detect deleted tweets on X
-    "thread_merger":     False,    # Merge tweet threads into one message
+    "thread_merger":     True,    # Merge tweet threads into one message
     "media_handler":     False,    # Handle image/video attachments
 }
 
@@ -38,6 +38,7 @@ FEATURES: dict[str, bool] = {
 _INSTANCE_OVERRIDES: dict[str, dict[str, bool]] = {
     "clone": {
         "deletion_checker": True,   # Testing deletion_checker on clone only
+        "thread_merger": True,
     },
     "main": {},
 }
