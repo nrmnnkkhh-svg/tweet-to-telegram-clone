@@ -5968,3 +5968,40 @@
 2026-08-08T19:50:34Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086078601451938244
 2026-08-08T19:50:34Z | INFO     | main                 | -                      | No new tweets
 2026-08-08T19:50:34Z | INFO     | main                 | -                      | Run complete
+2026-08-08T19:55:25Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-08T19:55:25Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-08T19:55:25Z | INFO     | main                 | -                      | Run started
+2026-08-08T19:55:25Z | INFO     | main                 | -                      | Cookies loaded
+2026-08-08T19:55:25Z | INFO     | main                 | -                      | User ID: 1005185803172106241
+2026-08-08T19:55:26Z | INFO     | main                 | -                      | Fetched 30 tweets
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086176221419753610
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086171352336056605
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086169639369724221
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086169589126238555
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086165840991260794
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086165490301280683
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086165028328153506
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086163045068210466
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086162084174217441
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086156736356823217
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086155007368241602
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086153048460538111
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086149700219027555
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086149435390661059
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086149338246349305
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086148747147293063
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086146795759906922
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086145995008528651
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086144242410270813
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086142402448826432
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086141441860866240
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086139362312380922
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086134060514971717
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086125421892952099
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086099863477854682
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086079085130735856
+2026-08-08T19:55:26Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2086078601451938244
+2026-08-08T19:55:27Z | INFO     | process_tweet        | 2086178344341545139    | Sent tweet → msg 1837
+2026-08-08T19:55:29Z | INFO     | process_tweet        | 2086178585589498030    | Edited msg 1837
+2026-08-08T19:55:31Z | INFO     | process_tweet        | 2086178646193004560    | Sent tweet → msg 1838
+2026-08-08T19:55:32Z | INFO     | process_tweet        | 2086178646193004560    | Run complete
