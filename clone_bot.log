@@ -5187,3 +5187,40 @@
 2026-08-21T21:05:28Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090858510229574099
 2026-08-21T21:05:29Z | INFO     | process_tweet        | 2090907183441428554    | Sent tweet → msg 3771
 2026-08-21T21:05:30Z | INFO     | process_tweet        | 2090907183441428554    | Run complete
+2026-08-21T21:10:36Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-21T21:10:36Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-21T21:10:36Z | INFO     | main                 | -                      | Run started
+2026-08-21T21:10:36Z | INFO     | main                 | -                      | Cookies loaded
+2026-08-21T21:10:36Z | INFO     | main                 | -                      | User ID: 1005185803172106241
+2026-08-21T21:10:37Z | INFO     | main                 | -                      | Fetched 30 tweets
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090907183441428554
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090906530241470717
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090902049399406754
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090902019955417384
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090901740501479754
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090898486623355191
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090898215100932120
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090893303252226361
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090890290269770062
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090889232109760773
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090886231164907675
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090885570264211925
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090885128142700917
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090884768825012575
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090883821323337909
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090883236889002011
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090881620647587863
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090879374702612672
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090879201704349931
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090878753987527038
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090878042608427064
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090876193104912474
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090872907362963964
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090871223093756159
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090871129871098236
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090867918674305243
+2026-08-21T21:10:37Z | DEBUG    | main                 | -                      | Skipping duplicate tweet 2090866618779713947
+2026-08-21T21:10:38Z | INFO     | process_tweet        | 2090908728467787925    | Sent tweet → msg 3772
+2026-08-21T21:10:40Z | INFO     | process_tweet        | 2090908872609280054    | Edited msg 3772
+2026-08-21T21:10:42Z | INFO     | process_tweet        | 2090908898681082330    | Edited msg 3772
+2026-08-21T21:10:43Z | INFO     | process_tweet        | 2090908898681082330    | Run complete
