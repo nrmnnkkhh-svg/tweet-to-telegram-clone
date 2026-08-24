@@ -6009,3 +6009,13 @@
 2026-08-24T06:10:42Z | INFO     | process_tweet        | 2091769904386998628    | Edited msg 4086
 2026-08-24T06:10:44Z | INFO     | process_tweet        | 2091770079767667098    | Edited msg 4086
 2026-08-24T06:10:46Z | INFO     | process_tweet        | 2091770079767667098    | Run complete
+2026-08-24T06:15:35Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-24T06:15:35Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-24T06:15:35Z | INFO     | main                 | -                      | Run started
+2026-08-24T06:15:35Z | INFO     | main                 | -                      | Cookies loaded
+2026-08-24T06:15:36Z | ERROR    | main                 | -                      | Fetch failed
+Traceback (most recent call last):
+  File "/home/runner/work/tweet-to-telegram-clone/tweet-to-telegram-clone/bot.py", line 153, in main
+    user_id = user.id
+              ^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'id'
