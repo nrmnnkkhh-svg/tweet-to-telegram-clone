@@ -4604,3 +4604,13 @@ Traceback (most recent call last):
     user_id = user.id
               ^^^^^^^
 AttributeError: 'NoneType' object has no attribute 'id'
+2026-08-25T09:45:33Z | INFO     | logger               | -                      | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-08-25T09:45:33Z | INFO     | logger               | -                      | Logging started | instance='clone' | file=clone_bot.log | flag=True
+2026-08-25T09:45:33Z | INFO     | main                 | -                      | Run started
+2026-08-25T09:45:33Z | INFO     | main                 | -                      | Cookies loaded
+2026-08-25T09:45:34Z | ERROR    | main                 | -                      | Fetch failed
+Traceback (most recent call last):
+  File "/home/runner/work/tweet-to-telegram-clone/tweet-to-telegram-clone/bot.py", line 153, in main
+    user_id = user.id
+              ^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'id'
