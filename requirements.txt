@@ -1,2 +1,2 @@
-twscrape[curl]>=0.1.14
+twikit @ git+https://github.com/d60/twikit.git
 aiohttp>=3.9
